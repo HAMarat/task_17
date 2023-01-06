@@ -61,6 +61,9 @@ movies_schema = MovieSchema(many=True)
 @movie_ns.route('/')
 class MoviesView(Resource):
     def get(self):
+        """
+        Метод для обработки GET запроса для возвращения данных всех фильмов или с определенным фильтром
+        """
         # обработка запроса по поиску фильмов по режиссеру
         did = request.args.get('director_id')
         if did:
@@ -97,12 +100,18 @@ class MoviesView(Resource):
 @movie_ns.route('/<int:mid>')
 class MovieView(Resource):
     def get(self, mid):
+        """
+        Метод для обработки GET запроса для возвращения данных конкретного фильма
+        """
         movie = db.session.query(Movie).get(mid)
         if movie:
             return movie_schema.dump(movie), 200
         return "Фильм не найден", 404
 
     def put(self, mid):
+        """
+        Метод для обработки PUT запроса на обновления данных фильма
+        """
         movie = db.session.query(Movie).get(mid)
         if movie:
             try:
@@ -118,12 +127,31 @@ class MovieView(Resource):
         return f"Фильм с id {mid} не найден"
 
     def delete(self, mid):
+        """
+        Метод для обработки DELETE запроса для удаления конкретного фильма
+        """
         movie = db.session.query(Movie).get(mid)
         if movie:
             db.session.delete(movie)
             db.session.commit()
             return 200
-        return f"Фильм с id {mid} не найден"
+        return f"Фильм с id {mid} не найден", 404
+
+
+@app.errorhandler(404)
+def error_404(error):
+    """
+    Вьюшка для обработки не найденной страницы
+    """
+    return f"Страница не найдена. Ошибка: {error}", 404
+
+
+@app.errorhandler(400)
+def error_400(error):
+    """
+    Вьюшка для обработки при не корректном json запросе
+    """
+    return f"Возможно, проблема в json запросе. Ошибка: {error}", 400
 
 
 if __name__ == '__main__':
